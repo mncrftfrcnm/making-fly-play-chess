@@ -1,4 +1,3 @@
-
 from pathlib import Path
 
 import chess
@@ -7,20 +6,22 @@ import numpy as np
 import pandas as pd
 import scipy.sparse as sparse
 from scipy.sparse.csgraph import breadth_first_order
+import time
 
 
+orig_time = time.time()
 # Model paths
 model_folder = Path(__file__).resolve().parent / "Drosophila_brain_model"
 neuron_file = model_folder / "Completeness_783.csv"
 connections_file = model_folder / "Connectivity_783.parquet"
-save_model_file = Path(__file__).resolve().parent / "fly_chess_rl.joblib"
+save_model_file = Path(__file__).resolve().parent / "fly_chess_model.joblib"
 
 # Hyperparameters
-SELF_PLAY_GAMES = 10000
-MAX_PLIES = 300
+SELF_PLAY_GAMES = 3000
+MAX_PLIES = 230
 OPENING_TEST_PLIES = 200
 READOUT_NEURONS = 1024
-PROPAGATION_STEPS = 8
+PROPAGATION_STEPS = 6
 LEARNING_RATE = 0.002
 DISCOUNT = 0.9953
 EPSILON_START = 0.40
@@ -62,7 +63,7 @@ def encode_board(board):
 
 # Load the fixed reservoir
 neurons = pd.read_csv(neuron_file, index_col=0)
-RESERVOIR_NEURONS = 16384 # can be len(neurons), but it takes a lot of time to train
+RESERVOIR_NEURONS = 8192 # can be len(neurons), but it takes a lot of time to train
 
 
 connections = pd.read_parquet(connections_file)
@@ -137,6 +138,22 @@ def connectome_features(board):
     return np.append(features, 1.0).astype(np.float32)
 
 
+def connectome_features_batch(encoded_boards):
+    state = np.zeros((len(selected), len(encoded_boards)), dtype=np.float32)
+    drive = np.zeros_like(state)
+    drive[:BOARD_FEATURES] = np.stack(encoded_boards, axis=1)
+
+    for _ in range(PROPAGATION_STEPS):
+        proposal = np.tanh(1.25 * (matrix @ state) + 1.5 * drive)
+        state = 0.35 * state + 0.65 * proposal
+
+    features = state[readout_indices]
+    lengths = np.linalg.norm(features, axis=0)
+    nonzero = lengths > 0
+    features[:, nonzero] /= lengths[nonzero]
+    return np.vstack((features, np.ones(len(encoded_boards), dtype=np.float32)))
+
+
 def material_score(board):
     values = {
         chess.PAWN: 1.0,
@@ -168,6 +185,10 @@ def terminal_reward(board):
 
 def predict_value(board, value_weights):
     features = connectome_features(board)
+    return value_from_features(features, value_weights)
+
+
+def value_from_features(features, value_weights):
     return float(np.tanh(value_weights @ features))
 
 
@@ -175,35 +196,50 @@ def choose_move(board, value_weights, epsilon):
     moves = list(board.legal_moves)
 
     if rng.random() < epsilon:
-        return moves[int(rng.integers(len(moves)))]
+        return moves[int(rng.integers(len(moves)))], None
 
-    scores = []
-    for move in moves:
-        next_board = board.copy(stack=True)
-        next_board.push(move)
-        score = terminal_reward(next_board)
+    scores = [None] * len(moves)
+    move_features = [None] * len(moves)
+    encoded_boards = []
+    encoded_indices = []
+
+    for index, move in enumerate(moves):
+        board.push(move)
+        score = terminal_reward(board)
         if score is None:
-            score = predict_value(next_board, value_weights)
-        scores.append(score)
+            encoded_boards.append(encode_board(board))
+            encoded_indices.append(index)
+        else:
+            scores[index] = score
+        board.pop()
+
+    if encoded_boards:
+        batch_features = connectome_features_batch(encoded_boards)
+        batch_scores = np.tanh(value_weights @ batch_features)
+        for column, index in enumerate(encoded_indices):
+            move_features[index] = batch_features[:, column]
+            scores[index] = float(batch_scores[column])
 
     best_score = max(scores) if board.turn == chess.WHITE else min(scores)
-    best_moves = [
-        move for move, score in zip(moves, scores) if np.isclose(score, best_score)
+    best_indices = [
+        index for index, score in enumerate(scores) if np.isclose(score, best_score)
     ]
-    return best_moves[int(rng.integers(len(best_moves)))]
+    best_index = best_indices[int(rng.integers(len(best_indices)))]
+    return moves[best_index], move_features[best_index]
 
 
 def train_one_game(value_weights, epsilon):
     board = chess.Board(START_FEN)
     errors = []
     truncated = False
+    features = connectome_features(board)
 
     for ply in range(MAX_PLIES):
-        features = connectome_features(board)
         old_value = float(np.tanh(value_weights @ features))
         old_material = material_score(board)
 
-        board.push(choose_move(board, value_weights, epsilon))
+        move, next_features = choose_move(board, value_weights, epsilon)
+        board.push(move)
 
         material_change = (material_score(board) - old_material) / 40.0
         reward = MATERIAL_SHAPING * material_change
@@ -213,7 +249,11 @@ def train_one_game(value_weights, epsilon):
         if final_reward is not None:
             target = final_reward + reward
         else:
-            target = reward + DISCOUNT * predict_value(board, value_weights)
+            if next_features is None:
+                next_features = connectome_features(board)
+            target = reward + DISCOUNT * value_from_features(
+                next_features, value_weights
+            )
 
         target = float(np.clip(target, -1.0, 1.0))
         td_error = target - old_value
@@ -224,6 +264,8 @@ def train_one_game(value_weights, epsilon):
 
         if final_reward is not None:
             break
+
+        features = next_features
 
     result = "draw-limit" if truncated else board.result(claim_draw=True)
     return result, len(board.move_stack), float(np.mean(errors))
@@ -253,7 +295,7 @@ def opening_test(value_weights):
     for _ in range(OPENING_TEST_PLIES):
         if board.is_game_over(claim_draw=True):
             break
-        move = choose_move(board, value_weights, epsilon=0.0)
+        move, _ = choose_move(board, value_weights, epsilon=0.0)
         moves.append(board.san(move))
         board.push(move)
 
@@ -281,6 +323,7 @@ for game in range(SELF_PLAY_GAMES):
         f"Game {game + 1:>2}/{SELF_PLAY_GAMES}: {result:<10} "
         f"plies={plies:<3} epsilon={epsilon:.2f} TD={mean_error:.4f}"
     )
+    print('timing:', time.time() - orig_time)
 
 joblib.dump(
     {
@@ -294,6 +337,3 @@ joblib.dump(
 )
 print(f"\n\n\nsaved {save_model_file.name}")
 opening_test(value_weights)
-
-
-

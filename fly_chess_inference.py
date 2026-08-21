@@ -14,9 +14,9 @@ import scipy.sparse as sparse
 
 
 # Model path
-model_file = Path(__file__).resolve().parent / "fly_chess_rl.joblib"
+model_file = Path(__file__).resolve().parent / "fly_chess_model.joblib"
 if not model_file.is_file():
-    model_file = Path("/content/fly_chess_rl.joblib")
+    model_file = Path("/content/fly_chess_model.joblib")
 
 BOARD_FEATURES = 64 * 12 + 1 + 4 + 8 + 1
 PROPAGATION_STEPS = 4
