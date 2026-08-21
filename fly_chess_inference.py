@@ -23,13 +23,15 @@ PROPAGATION_STEPS = 4
 RANDOM_SEED = 6
 START_FEN = chess.STARTING_FEN
 MAX_PLIES = 200
+DEFAULT_TOP_MOVES = 3
 
 # Only the strongest activity is drawn so the graph stays readable
 TRACE_NEURONS = 55
 TRACE_READOUTS = 10
 TRACE_EDGES = 100
 
-rng = np.random.default_rng(RANDOM_SEED)
+# Seed from system entropy so a new app session does not replay the same games.
+rng = np.random.default_rng()
 
 
 # Load the saved model
@@ -131,7 +133,7 @@ def predict_value(board):
     return run_connectome(board)
 
 
-def choose_move(board):
+def choose_move(board, random_top_n=None):
     moves = list(board.legal_moves)
     scores = []
 
@@ -146,11 +148,31 @@ def choose_move(board):
         scores.append(float(score))
 
     best_score = max(scores) if board.turn == chess.WHITE else min(scores)
-    best_moves = [
-        move for move, score in zip(moves, scores)
-        if np.isclose(score, best_score)
-    ]
-    move = best_moves[int(rng.integers(len(best_moves)))]
+
+    if random_top_n is not None and random_top_n > 1:
+        # In Fly vs Fly, sample from the strongest few moves instead of always
+        # taking the single best one. This keeps the play competitive while
+        # allowing each game to follow a different line.
+        ranked_indices = sorted(
+            range(len(moves)),
+            key=lambda index: scores[index],
+            reverse=board.turn == chess.WHITE,
+        )
+        candidate_indices = ranked_indices[: min(random_top_n, len(moves))]
+        chosen_index = candidate_indices[
+            int(rng.integers(len(candidate_indices)))
+        ]
+        move = moves[chosen_index]
+        chosen_score = scores[chosen_index]
+    else:
+        best_indices = [
+            index
+            for index, score in enumerate(scores)
+            if np.isclose(score, best_score)
+        ]
+        chosen_index = best_indices[int(rng.integers(len(best_indices)))]
+        move = moves[chosen_index]
+        chosen_score = scores[chosen_index]
 
     next_board = board.copy(stack=True)
     next_board.push(move)
@@ -158,7 +180,7 @@ def choose_move(board):
 
     trace["move"] = move
     trace["move_san"] = board.san(move)
-    trace["policy_score"] = best_score
+    trace["policy_score"] = chosen_score
     trace["moves"] = moves
     trace["scores"] = scores
 
@@ -474,7 +496,7 @@ def screen_values(state, board, status, trace=None, old_board=None, last_move=No
     )
 
 
-def start_game(mode, side, delay, max_plies):
+def start_game(mode, side, delay, max_plies, top_moves):
     if mode == "You vs Fly":
         human_color = chess.WHITE if side == "White" else chess.BLACK
         state = new_state(mode, human_color)
@@ -517,7 +539,7 @@ def start_game(mode, side, delay, max_plies):
 
         moving_side = "White Fly" if board.turn == chess.WHITE else "Black Fly"
         old_board = board.copy(stack=True)
-        move, trace = choose_move(board)
+        move, trace = choose_move(board, random_top_n=int(top_moves))
         san = push_move(board, state, move)
 
         if board.is_game_over(claim_draw=True):
@@ -616,12 +638,12 @@ with gr.Blocks(title="Fly Chess Neural Activity", css=CSS) as demo:
         f"**{matrix.nnz:,} fixed connections**"
     )
 
-    game_state = gr.State(new_state("You vs Fly", chess.WHITE))
+    game_state = gr.State(new_state("Fly vs Fly"))
 
     with gr.Row():
         mode = gr.Radio(
-            ["You vs Fly", "Fly vs Fly"],
-            value="You vs Fly",
+            ["Fly vs Fly", "You vs Fly"],
+            value="Fly vs Fly",
             label="Mode",
         )
         side = gr.Radio(["White", "Black"], value="White", label="Your side")
@@ -639,6 +661,13 @@ with gr.Blocks(title="Fly Chess Neural Activity", css=CSS) as demo:
             step=10,
             label="Fly vs Fly max plies",
         )
+        top_moves = gr.Slider(
+            1,
+            10,
+            value=DEFAULT_TOP_MOVES,
+            step=1,
+            label="Fly vs Fly top moves to choose from",
+        )
 
     start_button = gr.Button("Start / New Game", variant="primary")
 
@@ -648,7 +677,7 @@ with gr.Blocks(title="Fly Chess Neural Activity", css=CSS) as demo:
                 board_html(chess.Board(START_FEN)),
                 elem_classes="board",
             )
-            status = gr.Markdown("### Choose a mode and start.")
+            status = gr.Markdown("### Fly vs Fly selected — start a game.")
             move_select = gr.Dropdown(
                 choices=[],
                 label="Your legal move",
@@ -685,7 +714,7 @@ with gr.Blocks(title="Fly Chess Neural Activity", css=CSS) as demo:
 
     start_button.click(
         start_game,
-        inputs=[mode, side, delay, max_plies],
+        inputs=[mode, side, delay, max_plies, top_moves],
         outputs=outputs,
     )
 
