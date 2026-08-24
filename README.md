@@ -6,11 +6,8 @@ So, this project uses the fruit fly connectome from [Drosophila_brain_model](htt
 
 The short explanation is that a chess board gets turned into numbers, those numbers are sent through a network made from fly-neuron connections, and the result is used to score the position. White tries to make the score higher, Black tries to make it lower.
 
-The fly connections stay fixed during training. Only the final part that turns neuron activity into a chess score is learned.
 
-This is a simplified reservoir-computing experiment, not a biological simulation of a living fly brain.
-
-The trained model is already included, so you do not have to train it yourself just to play.
+The trained model is already included, so you do not have to train it yourself just to play(although it is quite dumb).
 
 ## easiest way to play: google colab
 
