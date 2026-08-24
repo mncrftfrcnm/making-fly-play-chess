@@ -4,13 +4,13 @@ import os
 import time
 
 import chess
-import chess.svg
 import gradio as gr
 import joblib
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import scipy.sparse as sparse
+from gradio_chessboard import Chessboard
 
 
 # Model path
@@ -19,7 +19,7 @@ if not model_file.is_file():
     model_file = Path("/content/fly_chess_model.joblib")
 
 BOARD_FEATURES = 64 * 12 + 1 + 4 + 8 + 1
-PROPAGATION_STEPS = 4
+PROPAGATION_STEPS = 6
 RANDOM_SEED = 6
 START_FEN = chess.STARTING_FEN
 MAX_PLIES = 200
@@ -45,8 +45,8 @@ selected = np.asarray(
     dtype=np.int64,
 )
 
-if "propagation_steps" in saved:
-    PROPAGATION_STEPS = int(saved["propagation_steps"])
+# New models save this explicitly. Older models were trained with 6 steps.
+PROPAGATION_STEPS = int(saved.get("propagation_steps", PROPAGATION_STEPS))
 
 coo = matrix.tocoo()
 edge_post = coo.row.astype(np.int64)
@@ -381,19 +381,6 @@ def candidate_text(board, trace):
     return "  \n".join(lines)
 
 
-def board_html(board, last_move=None, orientation=chess.WHITE):
-    check_square = board.king(board.turn) if board.is_check() else None
-    svg = chess.svg.board(
-        board=board,
-        orientation=orientation,
-        lastmove=last_move,
-        check=check_square,
-        size=520,
-        coordinates=True,
-    )
-    return '<div style="display:flex;justify-content:center;">' + svg + "</div>"
-
-
 def game_result(board):
     outcome = board.outcome(claim_draw=True)
     if outcome is None:
@@ -448,23 +435,6 @@ def move_history(state):
     return "  \n".join(lines)
 
 
-def legal_moves(board, enabled):
-    choices = []
-
-    if enabled:
-        for move in board.legal_moves:
-            choices.append((f"{board.san(move)}   [{move.uci()}]", move.uci()))
-        choices.sort(key=lambda x: x[0])
-
-    return gr.Dropdown(
-        choices=choices,
-        value=None,
-        label="Your legal move",
-        interactive=enabled,
-        filterable=True,
-    )
-
-
 def screen_values(state, board, status, trace=None, old_board=None, last_move=None):
     human_color = state.get("human_color")
     orientation = human_color if human_color is not None else chess.WHITE
@@ -486,14 +456,44 @@ def screen_values(state, board, status, trace=None, old_board=None, last_move=No
 
     return (
         state,
-        board_html(board, last_move, orientation),
+        gr.update(
+            value=board.fen(),
+            interactive=human_turn,
+            orientation="white" if orientation == chess.WHITE else "black",
+        ),
         status,
         move_history(state),
-        legal_moves(board, human_turn),
         plot,
         neural,
         candidates,
     )
+
+
+def move_from_fen(board, moved_fen):
+    """Find the one legal move that changes board into moved_fen."""
+    try:
+        moved_board = chess.Board(moved_fen)
+    except (TypeError, ValueError):
+        return None
+
+    target = (
+        moved_board.board_fen(),
+        moved_board.turn,
+        moved_board.castling_rights,
+    )
+
+    for move in board.legal_moves:
+        candidate = board.copy(stack=False)
+        candidate.push(move)
+        position = (
+            candidate.board_fen(),
+            candidate.turn,
+            candidate.castling_rights,
+        )
+        if position == target:
+            return move
+
+    return None
 
 
 def start_game(mode, side, delay, max_plies, top_moves):
@@ -572,7 +572,7 @@ def start_game(mode, side, delay, max_plies, top_moves):
         )
 
 
-def human_move(state, move_uci):
+def human_move(state, moved_fen):
     if not state or state.get("mode") != "You vs Fly":
         board = chess.Board(START_FEN)
         state = new_state("You vs Fly", chess.WHITE)
@@ -587,12 +587,9 @@ def human_move(state, move_uci):
     if board.turn != human_color:
         return screen_values(state, board, "### It is the fly's turn.")
 
-    if not move_uci:
-        return screen_values(state, board, "### Choose a legal move.")
-
-    move = chess.Move.from_uci(move_uci)
-    if move not in board.legal_moves:
-        return screen_values(state, board, "### That move is no longer legal.")
+    move = move_from_fen(board, moved_fen)
+    if move is None:
+        return screen_values(state, board, "### That is not a legal move.")
 
     push_move(board, state, move)
 
@@ -624,9 +621,9 @@ def human_move(state, move_uci):
 
 
 CSS = """
-.board svg {
-    width: min(520px, 96vw) !important;
-    height: auto !important;
+.board {
+    max-width: 560px;
+    margin: 0 auto;
 }
 """
 
@@ -673,18 +670,15 @@ with gr.Blocks(title="Fly Chess Neural Activity", css=CSS) as demo:
 
     with gr.Row():
         with gr.Column(scale=1):
-            board_view = gr.HTML(
-                board_html(chess.Board(START_FEN)),
+            board_view = Chessboard(
+                value=START_FEN,
+                label="Drag a piece to make your move",
+                interactive=False,
+                game_mode=True,
+                orientation="white",
                 elem_classes="board",
             )
             status = gr.Markdown("### Fly vs Fly selected — start a game.")
-            move_select = gr.Dropdown(
-                choices=[],
-                label="Your legal move",
-                interactive=False,
-                filterable=True,
-            )
-            play_button = gr.Button("Play Move")
 
         with gr.Column(scale=1):
             neural_plot = gr.Plot(
@@ -706,7 +700,6 @@ with gr.Blocks(title="Fly Chess Neural Activity", css=CSS) as demo:
         board_view,
         status,
         history,
-        move_select,
         neural_plot,
         neural_info,
         candidates,
@@ -718,10 +711,11 @@ with gr.Blocks(title="Fly Chess Neural Activity", css=CSS) as demo:
         outputs=outputs,
     )
 
-    play_button.click(
+    board_view.move(
         human_move,
-        inputs=[game_state, move_select],
+        inputs=[game_state, board_view],
         outputs=outputs,
+        show_progress="minimal",
     )
 
 

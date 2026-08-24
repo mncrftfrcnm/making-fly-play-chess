@@ -2,11 +2,13 @@
 
 No better way to use fly neurons than to make them play chess!
 
-So, this project uses the fruit fly connectome from [Drosophila_brain_model](https://github.com/philshiu/Drosophila_brain_model), and trains it to play chess using reinforcement learning.
+So, this project uses the fruit fly connectome from [Drosophila_brain_model](https://github.com/philshiu/Drosophila_brain_model), and trains it to play chess using reinforcement learning. More precisely, it is a chess agent built from the connectivity of the fruit-fly brain, used as a fixed neural reservoir.
 
 The short explanation is that a chess board gets turned into numbers, those numbers are sent through a network made from fly-neuron connections, and the result is used to score the position. White tries to make the score higher, Black tries to make it lower.
 
 The fly connections stay fixed during training. Only the final part that turns neuron activity into a chess score is learned.
+
+This is a simplified reservoir-computing experiment, not a biological simulation of a living fly brain.
 
 The trained model is already included, so you do not have to train it yourself just to play.
 
@@ -22,7 +24,7 @@ If you do not code and just want to play:
 4. Scroll to the final cell and open the Gradio link.
 5. Choose **You vs Fly** or **Fly vs Fly**, then press **Start / New Game**.
 
-In **You vs Fly**, choose White or Black and select your moves from the legal-move menu.
+In **You vs Fly**, choose White or Black and drag the pieces on the board. Illegal moves snap back automatically.
 
 In **Fly vs Fly**, you can watch two copies of the model play each other. You can change the delay, stop the game after a certain number of moves, or let each fly randomly choose between a few of its best moves.
 
@@ -77,7 +79,7 @@ Install the packages:
 
 ```bash
 python -m pip install --upgrade pip
-python -m pip install "python-chess==1.999" "gradio>=5,<6" "joblib>=1.3" "matplotlib>=3.7" "networkx>=3.1" "numpy>=1.24,<3" "scipy>=1.10,<2" "pandas>=2,<3" "pyarrow>=14"
+python -m pip install -r requirements.txt
 ```
 
 Run the game:
@@ -90,7 +92,13 @@ It will print a local address, usually `http://127.0.0.1:7860`. Open that in you
 
 ## training it yourself
 
-The trainer needs the original connectome files. Clone them into the project folder:
+The trainer needs the original connectome files. Install the extra packages first:
+
+```bash
+python -m pip install -r requirements-train.txt
+```
+
+Then clone the connectome into the project folder:
 
 ```bash
 git clone --depth 1 https://github.com/philshiu/Drosophila_brain_model.git Drosophila_brain_model
