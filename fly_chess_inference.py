@@ -1,17 +1,17 @@
-from pathlib import Path
 import html
 import os
 import time
+from pathlib import Path
 
 import chess
+import chess.svg
 import gradio as gr
 import joblib
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
-import scipy.sparse as sparse
 from gradio_chessboard import Chessboard
-
+from scipy import sparse
 
 # Model path
 model_file = Path(__file__).resolve().parent / "fly_chess_model.joblib"
@@ -381,6 +381,19 @@ def candidate_text(board, trace):
     return "  \n".join(lines)
 
 
+def board_html(board, last_move=None, orientation=chess.WHITE):
+    check_square = board.king(board.turn) if board.is_check() else None
+    svg = chess.svg.board(
+        board=board,
+        orientation=orientation,
+        lastmove=last_move,
+        check=check_square,
+        size=520,
+        coordinates=True,
+    )
+    return '<div style="display:flex;justify-content:center;">' + svg + "</div>"
+
+
 def game_result(board):
     outcome = board.outcome(claim_draw=True)
     if outcome is None:
@@ -458,8 +471,15 @@ def screen_values(state, board, status, trace=None, old_board=None, last_move=No
         state,
         gr.update(
             value=board.fen(),
-            interactive=human_turn,
-            orientation="white" if orientation == chess.WHITE else "black",
+            visible=human_turn and orientation == chess.WHITE,
+        ),
+        gr.update(
+            value=board.fen(),
+            visible=human_turn and orientation == chess.BLACK,
+        ),
+        gr.update(
+            value=board_html(board, last_move, orientation),
+            visible=not human_turn,
         ),
         status,
         move_history(state),
@@ -625,6 +645,10 @@ CSS = """
     max-width: 560px;
     margin: 0 auto;
 }
+.locked-board svg {
+    width: min(520px, 96vw) !important;
+    height: auto !important;
+}
 """
 
 with gr.Blocks(title="Fly Chess Neural Activity", css=CSS) as demo:
@@ -670,13 +694,28 @@ with gr.Blocks(title="Fly Chess Neural Activity", css=CSS) as demo:
 
     with gr.Row():
         with gr.Column(scale=1):
-            board_view = Chessboard(
+            white_board = Chessboard(
                 value=START_FEN,
                 label="Drag a piece to make your move",
-                interactive=False,
+                interactive=True,
                 game_mode=True,
                 orientation="white",
+                visible=False,
                 elem_classes="board",
+            )
+            black_board = Chessboard(
+                value=START_FEN,
+                label="Drag a piece to make your move",
+                interactive=True,
+                game_mode=True,
+                orientation="black",
+                visible=False,
+                elem_classes="board",
+            )
+            locked_board = gr.HTML(
+                board_html(chess.Board(START_FEN)),
+                visible=True,
+                elem_classes="locked-board",
             )
             status = gr.Markdown("### Fly vs Fly selected — start a game.")
 
@@ -697,7 +736,9 @@ with gr.Blocks(title="Fly Chess Neural Activity", css=CSS) as demo:
 
     outputs = [
         game_state,
-        board_view,
+        white_board,
+        black_board,
+        locked_board,
         status,
         history,
         neural_plot,
@@ -711,9 +752,16 @@ with gr.Blocks(title="Fly Chess Neural Activity", css=CSS) as demo:
         outputs=outputs,
     )
 
-    board_view.move(
+    white_board.move(
         human_move,
-        inputs=[game_state, board_view],
+        inputs=[game_state, white_board],
+        outputs=outputs,
+        show_progress="minimal",
+    )
+
+    black_board.move(
+        human_move,
+        inputs=[game_state, black_board],
         outputs=outputs,
         show_progress="minimal",
     )

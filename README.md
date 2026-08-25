@@ -6,8 +6,11 @@ So, this project uses the fruit fly connectome from [Drosophila_brain_model](htt
 
 The short explanation is that a chess board gets turned into numbers, those numbers are sent through a network made from fly-neuron connections, and the result is used to score the position. White tries to make the score higher, Black tries to make it lower.
 
+The fly connections stay fixed during training. Only the final part that turns neuron activity into a chess score is learned.
 
-The trained model is already included, so you do not have to train it yourself just to play(although it is quite dumb).
+This is a simplified reservoir-computing experiment, not a biological simulation of a living fly brain.
+
+The trained model is already included, so you do not have to train it yourself just to play.
 
 ## easiest way to play: google colab
 
@@ -21,7 +24,7 @@ If you do not code and just want to play:
 4. Scroll to the final cell and open the Gradio link.
 5. Choose **You vs Fly** or **Fly vs Fly**, then press **Start / New Game**.
 
-In **You vs Fly**, choose White or Black and drag the pieces on the board. Illegal moves snap back automatically.
+In **You vs Fly**, choose White or Black and drag the pieces on the board. The board is enabled only on your turn, and illegal moves snap back automatically.
 
 In **Fly vs Fly**, you can watch two copies of the model play each other. You can change the delay, stop the game after a certain number of moves, or let each fly randomly choose between a few of its best moves.
 
