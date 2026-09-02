@@ -144,11 +144,14 @@ There is also a Colab-ready training notebook, `fly_chess_trainer.ipynb`. It dow
 
 ## how good is it?
 
-I have not measured an Elo for it yet. It only looks one move ahead, so it is not meant to compete with Stockfish.
+I have not measured an Elo for it yet. It was trained only for a few thousand games, so it is not competing with stockfish(or any non-braindead players) any soon
 
-A good next test would be to play a few hundred games against random moves, a material-only bot, and low Stockfish levels. That would show whether the fly connections are doing anything useful beyond making funny chess games.
-
+Against a traditional algorithm, and a few others it comes at 50-50%, which is expected, while against the random it wins around 75% of the time, the rest being losses.
 ## credit
+
+
+## does the connectome help?
+Well, in this configuration it doesn't, as the algorithm is practically identical to the usual algorithm.
 
 The connectome data comes from [philshiu/Drosophila_brain_model](https://github.com/philshiu/Drosophila_brain_model).
 
