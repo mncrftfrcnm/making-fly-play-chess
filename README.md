@@ -149,7 +149,9 @@ I have not measured an Elo for it yet. It was trained only for a few thousand ga
 Against a traditional algorithm, and a few others it comes at 50-50%, which is expected, while against the random it wins around 75% of the time, the rest being losses.
 
 ## does the connectome help?
-Well, in this configuration it doesn't, as the algorithm is practically identical to the usual algorithm.
+Well, in this configuration it doesn't, as the algorithm is practically identical to the usual algorithm. 
+
+But it shows, that neurons carry no bias towards this learning process.
 
 
 ## credit
