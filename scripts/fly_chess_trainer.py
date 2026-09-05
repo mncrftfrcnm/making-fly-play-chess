@@ -1,12 +1,12 @@
+import time
 from pathlib import Path
 
 import chess
 import joblib
 import numpy as np
 import pandas as pd
-import scipy.sparse as sparse
+from scipy import sparse
 from scipy.sparse.csgraph import breadth_first_order
-import time
 
 
 orig_time = time.time()
