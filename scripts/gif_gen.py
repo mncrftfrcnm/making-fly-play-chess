@@ -161,7 +161,7 @@ def main():
         durations.append(480)
 
     durations[-1] = 2200
-    output_file = Path(__file__).resolve().parent / "chess_selfplay.gif"
+    output_file = Path(__file__).resolve().parent.parent / "chess_selfplay.gif"
     frames[0].save(
         output_file,
         save_all=True,

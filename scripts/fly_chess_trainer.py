@@ -11,10 +11,11 @@ import time
 
 orig_time = time.time()
 # Model paths
-model_folder = Path(__file__).resolve().parent / "Drosophila_brain_model"
+project_root = Path(__file__).resolve().parent.parent
+model_folder = project_root / "Drosophila_brain_model"
 neuron_file = model_folder / "Completeness_783.csv"
 connections_file = model_folder / "Connectivity_783.parquet"
-save_model_file = Path(__file__).resolve().parent / "fly_chess_model.joblib"
+save_model_file = project_root / "fly_chess_model.joblib"
 
 # Hyperparameters
 SELF_PLAY_GAMES = 3000

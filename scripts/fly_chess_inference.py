@@ -14,7 +14,8 @@ from gradio_chessboard import Chessboard
 from scipy import sparse
 
 # Model path
-model_file = Path(__file__).resolve().parent / "fly_chess_model.joblib"
+project_root = Path(__file__).resolve().parent.parent
+model_file = project_root / "fly_chess_model.joblib"
 if not model_file.is_file():
     model_file = Path("/content/fly_chess_model.joblib")
 

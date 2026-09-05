@@ -14,11 +14,11 @@ The trained model is already included, so you do not have to train it yourself j
 
 ## easiest way to play: google colab
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/mncrftfrcnm/making-fly-play-chess/blob/main/fly_chess_inference.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/mncrftfrcnm/making-fly-play-chess/blob/main/notebooks/fly_chess_inference.ipynb)
 
 If you do not code and just want to play:
 
-1. Open `fly_chess_inference.ipynb` in Google Colab.
+1. Open [`notebooks/fly_chess_inference.ipynb`](notebooks/fly_chess_inference.ipynb) in Google Colab.
 2. At the top, click **Runtime**, then **Run all**.
 3. Wait for everything to install and for the model to load.
 4. Scroll to the final cell and open the Gradio link.
@@ -85,7 +85,7 @@ python -m pip install -r requirements.txt
 Run the game:
 
 ```bash
-python fly_chess_inference.py
+python scripts/fly_chess_inference.py
 ```
 
 It will print a local address, usually `http://127.0.0.1:7860`. Open that in your browser.
@@ -107,7 +107,7 @@ git clone --depth 1 https://github.com/philshiu/Drosophila_brain_model.git Droso
 Then run:
 
 ```bash
-python fly_chess_trainer.py
+python scripts/fly_chess_trainer.py
 ```
 
 The default settings train 3,000 self-play games using 8,192 neurons. This can take a while, so for a quick test you can change:
@@ -116,7 +116,7 @@ The default settings train 3,000 self-play games using 8,192 neurons. This can t
 SELF_PLAY_GAMES = 2
 ```
 
-Some useful settings near the top of `fly_chess_trainer.py` are:
+Some useful settings near the top of [`scripts/fly_chess_trainer.py`](scripts/fly_chess_trainer.py) are:
 
 | Setting | Default | What it changes |
 | --- | ---: | --- |
@@ -127,20 +127,58 @@ Some useful settings near the top of `fly_chess_trainer.py` are:
 | `MAX_PLIES` | `230` | Maximum half-moves in one game |
 | `LEARNING_RATE` | `0.002` | How quickly the value weights change |
 
-If `fly_chess_model.joblib` already exists, training continues from its saved readout weights. The new model is saved to the same file when training finishes.
+If [`fly_chess_model.joblib`](fly_chess_model.joblib) already exists, training continues from its saved readout weights. The new model is saved to the same file when training finishes.
 
-There is also a Colab-ready training notebook, `fly_chess_trainer.ipynb`. It downloads the connectome data and lets you download the trained model after the run.
+There is also a Colab-ready training notebook, [`notebooks/fly_chess_trainer.ipynb`](notebooks/fly_chess_trainer.ipynb). It downloads the connectome data and lets you download the trained model after the run.
+
+## repository layout
+
+```text
+making-fly-play-chess/
+├── .github/
+│   └── workflows/
+│       └── pylint.yml
+├── notebooks/
+│   ├── connectome_vs_classical_architectures.ipynb
+│   ├── fly_chess_inference.ipynb
+│   └── fly_chess_trainer.ipynb
+├── scripts/
+│   ├── fly_chess_inference.py
+│   ├── fly_chess_trainer.py
+│   └── gif_gen.py
+├── .gitignore
+├── .pylintrc
+├── LICENSE
+├── README.md
+├── chess_selfplay.gif
+├── connectome_vs_classical_architectures.ipynb
+├── fly_chess_model.joblib
+├── requirements-train.txt
+└── requirements.txt
+```
+
+The connectome-vs-classical notebook is intentionally kept in two places. The root copy is easy to find because it is one of the main experiments in the project, while the identical copy under `notebooks/` keeps all notebooks together.
 
 ## files
 
 | File | What it does |
 | --- | --- |
-| `fly_chess_inference.py` | Runs the game and the Gradio interface |
-| `fly_chess_trainer.py` | Trains the model with self-play |
-| `fly_chess_model.joblib` | The included trained model |
-| `fly_chess_inference.ipynb` | Google Colab version for playing |
-| `fly_chess_trainer.ipynb` | Google Colab version for training |
-| `chess_selfplay.gif` | An example fly-vs-fly game |
+| [`scripts/fly_chess_inference.py`](scripts/fly_chess_inference.py) | Runs the game and the Gradio interface |
+| [`scripts/fly_chess_trainer.py`](scripts/fly_chess_trainer.py) | Trains the model with self-play |
+| [`scripts/gif_gen.py`](scripts/gif_gen.py) | Generates `chess_selfplay.gif` |
+| [`notebooks/fly_chess_inference.ipynb`](notebooks/fly_chess_inference.ipynb) | Google Colab version for playing |
+| [`notebooks/fly_chess_trainer.ipynb`](notebooks/fly_chess_trainer.ipynb) | Google Colab version for training |
+| [`notebooks/connectome_vs_classical_architectures.ipynb`](notebooks/connectome_vs_classical_architectures.ipynb) | Notebook-folder copy of the connectome-vs-classical comparison |
+| [`connectome_vs_classical_architectures.ipynb`](connectome_vs_classical_architectures.ipynb) | Prominent root copy of the connectome-vs-classical comparison |
+| [`fly_chess_model.joblib`](fly_chess_model.joblib) | The included trained model |
+| [`chess_selfplay.gif`](chess_selfplay.gif) | An example fly-vs-fly game |
+| [`requirements.txt`](requirements.txt) | Packages needed to run inference |
+| [`requirements-train.txt`](requirements-train.txt) | Extra packages needed for training |
+| [`.pylintrc`](.pylintrc) | Pylint configuration |
+| [`.gitignore`](.gitignore) | Files and folders Git should ignore |
+| [`.github/workflows/pylint.yml`](.github/workflows/pylint.yml) | GitHub Actions workflow that runs Pylint on tracked Python files |
+| [`LICENSE`](LICENSE) | Apache License 2.0 |
+| [`README.md`](README.md) | Project overview, setup instructions, and file guide |
 
 ## how good is it?
 
@@ -149,13 +187,14 @@ I have not measured an Elo for it yet. It was trained only for a few thousand ga
 Against a traditional algorithm, and a few others it comes at 50-50%, which is expected, while against the random it wins around 75% of the time, the rest being losses.
 
 ## does the connectome help?
-Well, in this configuration it doesn't, as the algorithm is practically identical to the usual algorithm. 
+
+Well, in this configuration it doesn't, as the algorithm is practically identical to the usual algorithm.
 
 But it shows, that neurons carry no bias towards this learning process.
 
+The main comparison experiment is [`connectome_vs_classical_architectures.ipynb`](connectome_vs_classical_architectures.ipynb). The same notebook is also available in the complete notebook collection at [`notebooks/connectome_vs_classical_architectures.ipynb`](notebooks/connectome_vs_classical_architectures.ipynb).
 
 ## credit
-
 
 The connectome data comes from [philshiu/Drosophila_brain_model](https://github.com/philshiu/Drosophila_brain_model).
 
