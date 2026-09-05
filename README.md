@@ -37,7 +37,7 @@ The board encoder makes 782 input values:
 - all 64 squares and 12 possible piece types;
 - whose turn it is;
 - castling rights;
-- en passant;
+- en passant(google en-passant);
 - the half-move clock.
 
 These values are fed into an 8,192-neuron section of the connectome. Activity moves through the fly connections for a few steps, and 1,024 readout neurons are used to produce a score between `-1` and `+1`.
@@ -149,7 +149,9 @@ I have not measured an Elo for it yet. It was trained only for a few thousand ga
 Against a traditional algorithm, and a few others it comes at 50-50%, which is expected, while against the random it wins around 75% of the time, the rest being losses.
 
 ## does the connectome help?
-Well, in this configuration it doesn't, as the algorithm is practically identical to the usual algorithm.
+Well, in this configuration it doesn't, as the algorithm is practically identical to the usual algorithm. 
+
+But it shows, that neurons carry no bias towards this learning process.
 
 
 ## credit
