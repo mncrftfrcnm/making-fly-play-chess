@@ -20,7 +20,7 @@ if not model_file.is_file():
     model_file = Path("/content/fly_chess_model.joblib")
 
 BOARD_FEATURES = 64 * 12 + 1 + 4 + 8 + 1
-PROPAGATION_STEPS = 6
+propagation_steps = 6
 RANDOM_SEED = 6
 START_FEN = chess.STARTING_FEN
 MAX_PLIES = 200
@@ -47,7 +47,7 @@ selected = np.asarray(
 )
 
 # New models save this explicitly. Older models were trained with 6 steps.
-PROPAGATION_STEPS = int(saved.get("propagation_steps", PROPAGATION_STEPS))
+propagation_steps = int(saved.get("propagation_steps", propagation_steps))
 
 coo = matrix.tocoo()
 edge_post = coo.row.astype(np.int64)
@@ -94,7 +94,7 @@ def run_connectome(board, trace=False):
     drive[:BOARD_FEATURES] = encode_board(board)
     states = []
 
-    for _ in range(PROPAGATION_STEPS):
+    for _ in range(propagation_steps):
         proposal = np.tanh(1.25 * (matrix @ state) + 1.5 * drive)
         state = 0.35 * state + 0.65 * proposal
 
@@ -449,7 +449,7 @@ def move_history(state):
     return "  \n".join(lines)
 
 
-def screen_values(state, board, status, trace=None, old_board=None, last_move=None):
+def screen_values(state, board, status, *, trace=None, old_board=None, last_move=None):
     human_color = state.get("human_color")
     orientation = human_color if human_color is not None else chess.WHITE
 
@@ -533,9 +533,9 @@ def start_game(mode, side, delay, max_plies, top_moves):
                 state,
                 board,
                 status,
-                trace,
-                old_board,
-                move,
+                trace=trace,
+                old_board=old_board,
+                last_move=move,
             )
         else:
             yield screen_values(
@@ -576,9 +576,9 @@ def start_game(mode, side, delay, max_plies, top_moves):
             state,
             board,
             status,
-            trace,
-            old_board,
-            move,
+            trace=trace,
+            old_board=old_board,
+            last_move=move,
         )
 
         if delay > 0:
@@ -635,9 +635,9 @@ def human_move(state, moved_fen):
         state,
         board,
         status,
-        trace,
-        old_board,
-        fly_move,
+        trace=trace,
+        old_board=old_board,
+        last_move=fly_move,
     )
 
 
@@ -747,20 +747,20 @@ with gr.Blocks(title="Fly Chess Neural Activity", css=CSS) as demo:
         candidates,
     ]
 
-    start_button.click(
+    start_button.click(  # pylint: disable=no-member
         start_game,
         inputs=[mode, side, delay, max_plies, top_moves],
         outputs=outputs,
     )
 
-    white_board.move(
+    white_board.move(  # pylint: disable=no-member
         human_move,
         inputs=[game_state, white_board],
         outputs=outputs,
         show_progress="minimal",
     )
 
-    black_board.move(
+    black_board.move(  # pylint: disable=no-member
         human_move,
         inputs=[game_state, black_board],
         outputs=outputs,
