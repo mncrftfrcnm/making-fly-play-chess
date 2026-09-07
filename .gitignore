@@ -216,3 +216,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Gradio
+flagged/
+
+# Jupyter notebook
+profile_default.py
+
