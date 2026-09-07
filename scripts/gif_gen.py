@@ -74,6 +74,7 @@ PIECE = {
 
 
 def font(size, bold=False):
+    '''loading the fonts if available. '''
     paths = [
         (
             "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
@@ -91,6 +92,7 @@ def font(size, bold=False):
 
 
 def frame(board, label, last=None):
+    '''generation of a one-step chess position'''
     square_size, top = 80, 86
     image = Image.new(
         "RGB", (8 * square_size, top + 8 * square_size + 34), "#181818"
