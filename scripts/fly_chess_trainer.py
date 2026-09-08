@@ -1,3 +1,4 @@
+'''A code to train the fly model'''
 import time
 from pathlib import Path
 
