@@ -1,8 +1,10 @@
 ---
 name: Bug Report
 about: Create a report to report a bug.
-title: '[BUG] A bug title'
+title: "[BUG] A bug title"
 labels: bug
+assignees: ''
+
 ---
 
 **issue with**
@@ -23,4 +25,3 @@ A clear and concise description of what the bug is.
 What you expected to happen.
 
 **screenshots/logs**
-
