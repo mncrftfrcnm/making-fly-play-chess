@@ -223,3 +223,6 @@ flagged/
 # Jupyter notebook
 profile_default.py
 
+# Codex
+codex
+codex/
