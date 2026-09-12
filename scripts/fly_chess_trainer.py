@@ -11,14 +11,15 @@ from scipy.sparse.csgraph import breadth_first_order
 
 
 orig_time = time.time()
-# Model paths
+
+# model paths
 project_root = Path(__file__).resolve().parent.parent
 model_folder = project_root / "Drosophila_brain_model"
 neuron_file = model_folder / "Completeness_783.csv"
 connections_file = model_folder / "Connectivity_783.parquet"
 save_model_file = project_root / "fly_chess_model.joblib"
 
-# Hyperparameters
+# hyperparameters
 SELF_PLAY_GAMES = 3000
 MAX_PLIES = 230
 OPENING_TEST_PLIES = 200
@@ -349,5 +350,8 @@ joblib.dump(
     save_model_file,
     compress=3,
 )
+
 print(f"\n\n\nsaved {save_model_file.name}")
+
+
 opening_test(value_weights)
