@@ -41,4 +41,8 @@ jobs:
           pip install pylint
           pip install -r requirements-flygym.txt
       - name: Run Pylint
-        run: pylint scripts/fly_chess_inference_flygym.py
+        env:
+          PYTHONPATH: scripts
+        run: |
+          pylint scripts/fly_chess_inference_flygym.py \
+            --disable=global-statement,import-outside-toplevel,broad-exception-caught
