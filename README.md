@@ -52,7 +52,7 @@ For every legal move, the program makes the move on a copy of the board and asks
 
 During training, the flies play against themselves. The score is updated from wins, losses, draws, future position values, and a small material reward.
 
-It is more of a strange AI experiment than a serious chess engine, but that is the point.
+It is more of a strange AI experiment than a serious chess engine, but that is the point. Who knows, maybe the fly neurons would actually make 1000 times better model?
 
 ## running the python files normally
 
