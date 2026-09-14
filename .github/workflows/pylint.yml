@@ -1,36 +1,44 @@
 name: Pylint
 
-on: [push]
+on:
+  push:
+  pull_request:
 
 jobs:
-  build:
+  core:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13"]
+
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install pylint
-        pip install -r requirements-train.txt
-    - name: Analysing the code with pylint
-      run: |
-        pylint $(git ls-files '*.py')
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pylint
+          pip install -r requirements-train.txt
+      - name: Run Pylint
+        run: |
+          pylint scripts/fly_chess_inference.py scripts/fly_chess_trainer.py scripts/gif_gen.py
 
+  flygym:
+    runs-on: ubuntu-latest
 
-
-# - name: First interaction
-#   uses: actions/first-interaction@v1.3.0
-#   with:
-#     # Token for the repository. Can be passed in using {{ secrets.GITHUB_TOKEN }}
-#     repo-token: 
-#     # Comment to post on an individual's first issue
-#     issue-message: # optional
-#     # Comment to post on an individual's first pull request
-#     pr-message: # optional
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pylint
+          pip install -r requirements-flygym.txt
+      - name: Run Pylint
+        run: pylint scripts/fly_chess_inference_flygym.py
