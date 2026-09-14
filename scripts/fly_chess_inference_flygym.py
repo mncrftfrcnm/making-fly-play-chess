@@ -1,3 +1,5 @@
+# pylint: disable=global-statement,import-outside-toplevel,broad-exception-caught
+
 import html
 import os
 import sys
@@ -311,9 +313,9 @@ with gr.Blocks(title="Fly Chess Neural Activity", css=CSS) as demo:
         )
 
     show_flygym = gr.Checkbox(
-        value=False,
+        value=True,
         label="Show 3D fly",
-        info="Slower: renders a FlyGym simulation after each fly move.",
+        info="Turning this off will make the game faster.",
     )
 
     start_button = gr.Button("Start / New Game", variant="primary")
@@ -366,12 +368,12 @@ with gr.Blocks(title="Fly Chess Neural Activity", css=CSS) as demo:
             label="3D fly movement",
             autoplay=True,
             loop=False,
-            visible=False,
+            visible=True,
             elem_classes="fly-video",
         )
         fly_info = gr.Markdown(
             "### 3D fly\nWaiting for the fly to move.",
-            visible=False,
+            visible=True,
         )
 
     outputs = [
