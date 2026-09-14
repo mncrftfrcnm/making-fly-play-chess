@@ -1,68 +1,75 @@
 # making-fly-play-chess
 
-No better way to use fly neurons than to make them play chess.
+No better way to use fly neurons than to make them play chess!
 
-This project turns part of the fruit-fly connectome into a fixed neural reservoir for a chess position evaluator. A board position is encoded as numbers, activity propagates through fly-derived connections, and a learned readout scores the resulting position. White tries to raise the score; Black tries to lower it.
+So, this project uses the fruit fly connectome from [Drosophila_brain_model](https://github.com/philshiu/Drosophila_brain_model), and trains it to play chess using reinforcement learning. More precisely, it is a chess agent built from the connectivity of the fruit-fly brain, used as a fixed neural reservoir.
 
-The connectome itself is not trained. Only the final readout weights learn from self-play.
+The short explanation is that a chess board gets turned into numbers, those numbers are sent through a network made from fly-neuron connections, and the result is used to score the position. White tries to make the score higher, Black tries to make it lower.
 
-This is a reservoir-computing experiment, not a biological simulation of a fly understanding chess. The optional 3D FlyGym view is also a visualization: chess readout activity is mapped onto simulated fly joints, but that mapping is not meant to reproduce real motor circuitry.
+The fly connections stay fixed during training. Only the final part that turns neuron activity into a chess score is learned.
 
-![Example fly-vs-fly game](chess_selfplay.gif)
+This is a simplified reservoir-computing experiment, not a biological simulation of a living fly brain.
 
-## play in Google Colab
+The trained model is already included, so you do not have to train it yourself just to play.
 
-| Standard interface | Interface with 3D FlyGym view |
-| --- | --- |
-| [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/mncrftfrcnm/making-fly-play-chess/blob/main/notebooks/fly_chess_inference.ipynb) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/mncrftfrcnm/making-fly-play-chess/blob/main/notebooks/fly_chess_inference_flygym.ipynb) |
-| Faster. Chess board + neural activity view. | Slower. Adds MuJoCo/FlyGym simulation and video rendering after fly moves. |
+## easiest way to play: google colab
 
-For either notebook, open it in Colab and choose **Runtime → Run all**. The final cell launches the Gradio app.
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/mncrftfrcnm/making-fly-play-chess/blob/main/notebooks/fly_chess_inference.ipynb)
 
-The standard interface includes:
+**With the 3D FlyGym view (takes longer to run):**
 
-- **You vs Fly** and **Fly vs Fly** modes;
-- White/Black side selection;
-- a delay control and move limit for self-play;
-- candidate move scores;
-- the strongest reservoir activity and readout contributions;
-- move history.
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/mncrftfrcnm/making-fly-play-chess/blob/main/notebooks/fly_chess_inference_flygym.ipynb)
 
-The FlyGym notebook keeps the same interface and adds **Show 3D fly**. It is off by default. Leaving it off skips physics simulation and video rendering, which makes games considerably faster.
+If you do not code and just want to play:
 
-## how it works
+1. Open [`notebooks/fly_chess_inference.ipynb`](notebooks/fly_chess_inference.ipynb) in Google Colab.
+2. At the top, click **Runtime**, then **Run all**.
+3. Wait for everything to install and for the model to load.
+4. Scroll to the final cell and open the Gradio link.
+5. Choose **You vs Fly** or **Fly vs Fly**, then press **Start / New Game**.
 
-The board encoder produces 782 values:
+In **You vs Fly**, choose White or Black and drag the pieces on the board. The board is enabled only on your turn, and illegal moves snap back automatically.
 
-- 64 squares × 12 piece/color channels;
-- side to move;
+In **Fly vs Fly**, you can watch two copies of the model play each other. You can change the delay, stop the game after a certain number of moves, or let each fly randomly choose between a few of its best moves.
+
+The interface also shows which moves the fly considered and which neurons were most active after its move.
+
+## what is actually happening?
+
+The board encoder makes 782 input values:
+
+- all 64 squares and 12 possible piece types;
+- whose turn it is;
 - castling rights;
-- en passant file;
-- half-move clock.
+- en passant(google en-passant);
+- the half-move clock.
 
-Those values drive the first 782 units of an 8,192-neuron reservoir selected from the connectome. Activity propagates through the fixed connection matrix for six steps. The model then reads 1,024 reservoir neurons and combines them with learned weights to produce a value between `-1` and `+1`.
+These values are fed into an 8,192-neuron section of the connectome. Activity moves through the fly connections for a few steps, and 1,024 readout neurons are used to produce a score between `-1` and `+1`.
 
-For each legal move, the program makes the move on a copy of the board and evaluates the resulting position. White prefers higher values and Black prefers lower ones.
+For every legal move, the program makes the move on a copy of the board and asks the network for a new score. White chooses a high score and Black chooses a low score.
 
-During training, the model learns only the readout weights. The fly-derived connectivity remains fixed.
+During training, the flies play against themselves. The score is updated from wins, losses, draws, future position values, and a small material reward.
 
-### 3D fly view
+It is more of a strange AI experiment than a serious chess engine, but that is the point.
 
-The optional FlyGym version uses the same neural trace shown in the technical graph. For each propagation step, it takes the 1,024 chess readout neurons, applies the learned value weights, groups those contributions across FlyGym's actuated leg joints, and uses the result as small joint offsets.
+## running the python files normally
 
-There is no random neuron-to-body projection. The body movement is deterministic for a given neural trace, but the mapping is intentionally a visualization rather than a claim about biological motor function.
+You need Python 3.10 or newer and Git.
 
-## run locally
-
-The standard interface supports Python 3.10+.
+Clone the project:
 
 ```bash
 git clone https://github.com/mncrftfrcnm/making-fly-play-chess.git
 cd making-fly-play-chess
+```
+
+Make a virtual environment:
+
+```bash
 python -m venv .venv
 ```
 
-Activate the environment:
+Activate it:
 
 ```bash
 # macOS / Linux
@@ -72,55 +79,69 @@ source .venv/bin/activate
 .venv\Scripts\Activate.ps1
 ```
 
-Install and run the standard interface:
+Install the packages:
 
 ```bash
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
+```
+
+Run the game:
+
+```bash
 python scripts/fly_chess_inference.py
 ```
 
-### run with FlyGym
+It will print a local address, usually `http://127.0.0.1:7860`. Open that in your browser.
 
-FlyGym 2.1 requires Python 3.12–3.14. Use a Python 3.12+ environment and install the optional requirements:
+## training it yourself
 
-```bash
-python -m pip install -r requirements-flygym.txt
-python scripts/fly_chess_inference_flygym.py
-```
-
-The **Show 3D fly** option is off by default. Turn it on only when you want the simulated body view.
-
-## train it yourself
-
-Training needs the source connectome files:
+The trainer needs the original connectome files. Install the extra packages first:
 
 ```bash
 python -m pip install -r requirements-train.txt
+```
+
+Then clone the connectome into the project folder:
+
+```bash
 git clone --depth 1 https://github.com/philshiu/Drosophila_brain_model.git Drosophila_brain_model
+```
+
+Then run:
+
+```bash
 python scripts/fly_chess_trainer.py
 ```
 
-The default configuration uses 3,000 self-play games and 8,192 reservoir neurons. For a quick pipeline test, lower `SELF_PLAY_GAMES` near the top of `scripts/fly_chess_trainer.py`.
+The default settings train 3,000 self-play games using 8,192 neurons. This can take a while, so for a quick test you can change:
 
-| Setting | Default | Meaning |
+```python
+SELF_PLAY_GAMES = 2
+```
+
+Some useful settings near the top of [`scripts/fly_chess_trainer.py`](scripts/fly_chess_trainer.py) are:
+
+| Setting | Default | What it changes |
 | --- | ---: | --- |
-| `SELF_PLAY_GAMES` | `3000` | self-play games |
-| `RESERVOIR_NEURONS` | `8192` | reservoir size |
-| `READOUT_NEURONS` | `1024` | neurons used by the value readout |
-| `PROPAGATION_STEPS` | `6` | recurrent propagation steps |
-| `MAX_PLIES` | `230` | maximum half-moves per training game |
-| `LEARNING_RATE` | `0.002` | readout learning rate |
+| `SELF_PLAY_GAMES` | `3000` | Number of self-play games |
+| `RESERVOIR_NEURONS` | `8192` | Number of fly neurons used |
+| `READOUT_NEURONS` | `1024` | Neurons used for the final score |
+| `PROPAGATION_STEPS` | `6` | How many times activity moves through the network |
+| `MAX_PLIES` | `230` | Maximum half-moves in one game |
+| `LEARNING_RATE` | `0.002` | How quickly the value weights change |
 
-If `fly_chess_model.joblib` already exists, training continues from its saved readout weights and writes the updated model back to the same file.
+If [`fly_chess_model.joblib`](fly_chess_model.joblib) already exists, training continues from its saved readout weights. The new model is saved to the same file when training finishes.
 
-A Colab training notebook is available at [`notebooks/fly_chess_trainer.ipynb`](notebooks/fly_chess_trainer.ipynb).
+There is also a Colab-ready training notebook, [`notebooks/fly_chess_trainer.ipynb`](notebooks/fly_chess_trainer.ipynb). It downloads the connectome data and lets you download the trained model after the run.
 
 ## repository layout
 
 ```text
 making-fly-play-chess/
-├── .github/workflows/pylint.yml
+├── .github/
+│   └── workflows/
+│       └── pylint.yml
 ├── notebooks/
 │   ├── connectome_vs_classical_architectures.ipynb
 │   ├── fly_chess_inference.ipynb
@@ -130,32 +151,65 @@ making-fly-play-chess/
 │   ├── fly_chess_inference.py
 │   ├── fly_chess_inference_flygym.py
 │   ├── fly_chess_trainer.py
-│   └── gif_gen.py
-├── fly_chess_model.joblib
+│   ├── gif_gen.py
+│   └── gif_gen_flygym.py
+├── .gitignore
+├── .pylintrc
+├── LICENSE
+├── README.md
 ├── chess_selfplay.gif
-├── requirements.txt
+├── connectome_vs_classical_architectures.ipynb
+├── fly_chess_model.joblib
 ├── requirements-flygym.txt
 ├── requirements-train.txt
-├── LICENSE
-└── README.md
+└── requirements.txt
 ```
 
-The connectome-vs-classical comparison notebook is also kept at the repository root so the experiment is easy to find.
+The connectome-vs-classical notebook is intentionally kept in two places. The root copy is easy to find because it is one of the main experiments in the project, while the identical copy under `notebooks/` keeps all notebooks together.
+
+## files
+
+| File | What it does |
+| --- | --- |
+| [`scripts/fly_chess_inference.py`](scripts/fly_chess_inference.py) | Runs the game and the Gradio interface |
+| [`scripts/fly_chess_inference_flygym.py`](scripts/fly_chess_inference_flygym.py) | Runs the game with the optional FlyGym view |
+| [`scripts/fly_chess_trainer.py`](scripts/fly_chess_trainer.py) | Trains the model with self-play |
+| [`scripts/gif_gen.py`](scripts/gif_gen.py) | Generates `chess_selfplay.gif` |
+| [`scripts/gif_gen_flygym.py`](scripts/gif_gen_flygym.py) | Generates a FlyGym + neural activity demo GIF |
+| [`notebooks/fly_chess_inference.ipynb`](notebooks/fly_chess_inference.ipynb) | Google Colab version for playing |
+| [`notebooks/fly_chess_inference_flygym.ipynb`](notebooks/fly_chess_inference_flygym.ipynb) | Google Colab version with the FlyGym view |
+| [`notebooks/fly_chess_trainer.ipynb`](notebooks/fly_chess_trainer.ipynb) | Google Colab version for training |
+| [`notebooks/connectome_vs_classical_architectures.ipynb`](notebooks/connectome_vs_classical_architectures.ipynb) | Notebook-folder copy of the connectome-vs-classical comparison |
+| [`connectome_vs_classical_architectures.ipynb`](connectome_vs_classical_architectures.ipynb) | Prominent root copy of the connectome-vs-classical comparison |
+| [`fly_chess_model.joblib`](fly_chess_model.joblib) | The included trained model |
+| [`chess_selfplay.gif`](chess_selfplay.gif) | An example fly-vs-fly game |
+| [`requirements.txt`](requirements.txt) | Packages needed to run inference |
+| [`requirements-flygym.txt`](requirements-flygym.txt) | Extra packages needed for the FlyGym version |
+| [`requirements-train.txt`](requirements-train.txt) | Extra packages needed for training |
+| [`.pylintrc`](.pylintrc) | Pylint configuration |
+| [`.gitignore`](.gitignore) | Files and folders Git should ignore |
+| [`.github/workflows/pylint.yml`](.github/workflows/pylint.yml) | GitHub Actions workflow that runs Pylint on tracked Python files |
+| [`LICENSE`](LICENSE) | Apache License 2.0 |
+| [`README.md`](README.md) | Project overview, setup instructions, and file guide |
 
 ## how good is it?
 
-This is an experiment first and a chess engine second. I have not established a reliable Elo rating, and the current model was trained on only a few thousand self-play games. Treat the included game and comparison notebook as demonstrations, not as a competitive benchmark.
+I have not measured an Elo for it yet. It was trained only for a few thousand games, so it is not competing with stockfish(or any non-braindead players) any soon
+
+Against a traditional algorithm, and a few others it comes at 50-50%, which is expected, while against the random it wins around 75% of the time, the rest being losses.
 
 ## does the connectome help?
 
-The current comparison does not show a clear advantage from using the connectome over simpler fixed architectures. That result is still useful: the point of the project is to test what happens when a real connectome-derived topology is repurposed as a reservoir, not to claim that a fly brain is naturally good at chess.
+Well, in this configuration it doesn't, as the algorithm is practically identical to the usual algorithm.
 
-The comparison experiment is [`connectome_vs_classical_architectures.ipynb`](connectome_vs_classical_architectures.ipynb), with an identical copy under [`notebooks/`](notebooks/connectome_vs_classical_architectures.ipynb).
+But it shows, that neurons carry no bias towards this learning process.
+
+The main comparison experiment is [`connectome_vs_classical_architectures.ipynb`](connectome_vs_classical_architectures.ipynb). The same notebook is also available in the complete notebook collection at [`notebooks/connectome_vs_classical_architectures.ipynb`](notebooks/connectome_vs_classical_architectures.ipynb).
 
 ## credit
 
-Connectome data comes from [philshiu/Drosophila_brain_model](https://github.com/philshiu/Drosophila_brain_model), accompanying the paper [*A leaky integrate-and-fire computational model based on the connectome of the entire adult Drosophila brain reveals insights into sensorimotor processing*](https://doi.org/10.1101/2023.05.02.539144).
+The connectome data comes from [philshiu/Drosophila_brain_model](https://github.com/philshiu/Drosophila_brain_model).
 
-The optional body simulation uses [FlyGym / NeuroMechFly](https://neuromechfly.org/).
+That project accompanies the paper [*A leaky integrate-and-fire computational model based on the connectome of the entire adult Drosophila brain reveals insights into sensorimotor processing*](https://doi.org/10.1101/2023.05.02.539144).
 
-This repository is licensed under the [Apache License 2.0](LICENSE).
+This repository uses the [Apache License 2.0](LICENSE).
