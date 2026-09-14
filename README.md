@@ -165,7 +165,7 @@ making-fly-play-chess/
 └── requirements.txt
 ```
 
-The connectome-vs-classical notebook is intentionally kept in two places. The root copy is easy to find because it is one of the main experiments in the project, while the identical copy under `notebooks/` keeps all notebooks together.
+The connectome-vs-classical notebook is kept in two places. The root copy is easy to find because it is one of the main experiments in the project, while the identical copy under `notebooks/` keeps all notebooks together.
 
 ## files
 
@@ -194,9 +194,9 @@ The connectome-vs-classical notebook is intentionally kept in two places. The ro
 
 ## how good is it?
 
-I have not measured an Elo for it yet. It was trained only for a few thousand games, so it is not competing with stockfish(or any non-braindead players) any soon
+I have not measured an Elo for it yet(but i guess high enough to shove the rook up to unimaginable places). It was trained only for a few thousand games, so it is not competing with stockfish(or any non-braindead players) any soon
 
-Against a traditional algorithm, and a few others it comes at 50-50%, which is expected, while against the random it wins around 75% of the time, the rest being losses.
+Against a traditional algorithm, and a few others it comes at 50-50%, which is expected, while against the random it wins around 75% of the time, the rest being draws.
 
 ## does the connectome help?
 
