@@ -12,6 +12,8 @@ This is a simplified reservoir-computing experiment, not a biological simulation
 
 The trained model is already included, so you do not have to train it yourself just to play.
 
+![Full interface layout preview](assets/fly_chess_full_view_sample.gif)
+
 ## easiest way to play: google colab
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/mncrftfrcnm/making-fly-play-chess/blob/main/notebooks/fly_chess_inference.ipynb)
@@ -142,6 +144,8 @@ making-fly-play-chess/
 ├── .github/
 │   └── workflows/
 │       └── pylint.yml
+├── assets/
+│   └── fly_chess_full_view_sample.gif
 ├── notebooks/
 │   ├── connectome_vs_classical_architectures.ipynb
 │   ├── fly_chess_inference.ipynb
@@ -183,6 +187,7 @@ The connectome-vs-classical notebook is kept in two places. The root copy is eas
 | [`connectome_vs_classical_architectures.ipynb`](connectome_vs_classical_architectures.ipynb) | Prominent root copy of the connectome-vs-classical comparison |
 | [`fly_chess_model.joblib`](fly_chess_model.joblib) | The included trained model |
 | [`chess_selfplay.gif`](chess_selfplay.gif) | An example fly-vs-fly game |
+| [`assets/fly_chess_full_view_sample.gif`](assets/fly_chess_full_view_sample.gif) | Small preview of the board + neuron + FlyGym layout |
 | [`requirements.txt`](requirements.txt) | Packages needed to run inference |
 | [`requirements-flygym.txt`](requirements-flygym.txt) | Extra packages needed for the FlyGym version |
 | [`requirements-train.txt`](requirements-train.txt) | Extra packages needed for training |
