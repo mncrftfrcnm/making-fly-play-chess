@@ -1,9 +1,10 @@
 from pathlib import Path
+import os
 
 import chess
 import matplotlib.pyplot as plt
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image, ImageChops, ImageDraw, ImageOps
 
 import fly_chess_inference as core
 import fly_chess_inference_flygym as flygym_app
@@ -11,7 +12,10 @@ import gif_gen
 
 
 MAX_FRAMES = 20
-FRAME_MS = 700
+FLY_FRAMES_PER_MOVE = 8
+FRAME_MS = 60
+PANEL_HEIGHT = 420
+MOTION_THRESHOLD = 14
 
 
 def plot_image(trace):
@@ -23,55 +27,142 @@ def plot_image(trace):
     return image
 
 
-def fly_image():
-    frames = next(iter(flygym_app.renderer.frames.values()))
-    if not frames:
+def render_fly_images(trace):
+    flygym_app.setup_flygym()
+
+    keyframes = flygym_app.fly_keyframes(trace["states"])
+    neutral = flygym_app.steps.default_pose_by_dof_order(flygym_app.dof_order)
+    flygym_app.renderer.reset()
+
+    sim_steps = max(
+        1,
+        int(flygym_app.FLY_CLIP_SECONDS / flygym_app.fly_sim.timestep),
+    )
+    last_keyframe = len(keyframes) - 1
+
+    for step in range(sim_steps):
+        position = (
+            0.0
+            if sim_steps == 1
+            else last_keyframe * step / (sim_steps - 1)
+        )
+        action = flygym_app.locomotion_action(
+            joint_angles=neutral + flygym_app.interpolate(keyframes, position),
+            adhesion_onoff=np.ones(6, dtype=bool),
+        )
+        flygym_app.apply_locomotion_action(
+            flygym_app.fly_sim,
+            flygym_app.fly.name,
+            action,
+        )
+        flygym_app.fly_sim.step_with_profile()
+        flygym_app.fly_sim.render_as_needed_with_profile()
+
+    rendered = next(
+        (frames for frames in flygym_app.renderer.frames.values() if frames),
+        None,
+    )
+    if not rendered:
         raise RuntimeError("FlyGym did not render any frames.")
-    return Image.fromarray(frames[-1]).convert("RGB")
+
+    count = min(FLY_FRAMES_PER_MOVE, len(rendered))
+    indexes = np.linspace(0, len(rendered) - 1, count, dtype=int)
+    return [
+        Image.fromarray(rendered[index]).convert("RGB")
+        for index in indexes
+    ]
 
 
-def combine(left, right, label):
-    height = max(left.height, right.height)
+def resize_height(image, height=PANEL_HEIGHT):
+    if image.height == height:
+        return image
 
-    if left.height != height:
-        width = round(left.width * height / left.height)
-        left = left.resize((width, height))
-    if right.height != height:
-        width = round(right.width * height / right.height)
-        right = right.resize((width, height))
+    width = round(image.width * height / image.height)
+    return image.resize((width, height), Image.Resampling.LANCZOS)
 
-    top = 55
-    image = Image.new("RGB", (left.width + right.width, height + top), "#181818")
-    image.paste(left, (0, top))
-    image.paste(right, (left.width, top))
 
+def highlight_motion(previous, current):
+    if previous is None:
+        return current
+
+    diff = ImageChops.difference(previous, current).convert("L")
+    mask = diff.point(lambda value: 170 if value > MOTION_THRESHOLD else 0)
+
+    overlay = Image.new("RGBA", current.size, (0, 255, 180, 0))
+    overlay.putalpha(mask)
+    return Image.alpha_composite(current.convert("RGBA"), overlay).convert("RGB")
+
+
+def decorate_fly(image):
+    image = ImageOps.expand(image, border=3, fill="#00d18f")
     draw = ImageDraw.Draw(image)
-    draw.text((18, 14), label, font=gif_gen.font(28, True), fill="white")
+    draw.text(
+        (12, 10),
+        "Fly movement",
+        font=gif_gen.font(22, True),
+        fill="#00ffb3",
+    )
+    return image
+
+
+def combine(board, neurons, fly):
+    board = resize_height(board)
+    neurons = resize_height(neurons)
+    fly = resize_height(fly)
+
+    image = Image.new(
+        "RGB",
+        (board.width + neurons.width + fly.width, PANEL_HEIGHT),
+        "#181818",
+    )
+    image.paste(board, (0, 0))
+    image.paste(neurons, (board.width, 0))
+    image.paste(fly, (board.width + neurons.width, 0))
     return image
 
 
 def main():
     board = chess.Board()
     frames = []
+    previous_fly = None
+
+    if os.name != "nt" and not os.environ.get("DISPLAY"):
+        os.environ.setdefault("MUJOCO_GL", "egl")
+        os.environ.setdefault("PYOPENGL_PLATFORM", "egl")
 
     try:
         for ply, san in enumerate(gif_gen.SAN_MOVES[:MAX_FRAMES], 1):
             move = board.parse_san(san)
+            who = "White" if board.turn == chess.WHITE else "Black"
             board.push(move)
 
             trace = core.run_connectome(board, trace=True)
             trace["move"] = move
             trace["move_san"] = san
 
-            flygym_app.render_fly(trace)
-
-            who = "White" if ply % 2 else "Black"
             label = f"{(ply + 1) // 2}. {who}: {san}"
-            frames.append(combine(plot_image(trace), fly_image(), label))
+            board_image = gif_gen.frame(
+                board,
+                label,
+                (move.from_square, move.to_square),
+            )
+            neurons = plot_image(trace)
 
-        output_file = Path(__file__).resolve().parent.parent / "chess_flygym_neurons.gif"
+            for fly_raw in render_fly_images(trace):
+                fly = highlight_motion(previous_fly, fly_raw)
+                frames.append(combine(board_image, neurons, decorate_fly(fly)))
+                previous_fly = fly_raw
+
+        if not frames:
+            raise RuntimeError("No GIF frames were generated.")
+
+        output_file = (
+            Path(__file__).resolve().parent.parent
+            / "chess_flygym_neurons.gif"
+        )
         durations = [FRAME_MS] * len(frames)
-        durations[-1] = 1800
+        durations[-1] = 1600
+
         frames[0].save(
             output_file,
             save_all=True,
@@ -79,8 +170,9 @@ def main():
             duration=durations,
             loop=0,
             disposal=2,
+            optimize=False,
         )
-        print(f"Wrote {output_file.name}")
+        print(f"Wrote {output_file.name} with {len(frames)} frames")
     finally:
         if flygym_app.fly_sim is not None:
             flygym_app.fly_sim.close()
