@@ -4,7 +4,12 @@ on:
   push:
     branches:
       - smoother-flygym-gif-readme
+    paths-ignore:
+      - chess_flygym_neurons.gif
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   render:
@@ -27,9 +32,10 @@ jobs:
         pip install -r requirements-flygym.txt
     - name: Render GIF
       run: python scripts/gif_gen_flygym.py
-    - name: Upload GIF
-      uses: actions/upload-artifact@v4
-      with:
-        name: chess-flygym-neurons
-        path: chess_flygym_neurons.gif
-        if-no-files-found: error
+    - name: Commit GIF
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git add chess_flygym_neurons.gif
+        git commit -m "Add smoother FlyGym demo GIF"
+        git push
