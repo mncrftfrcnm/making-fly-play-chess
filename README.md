@@ -12,13 +12,17 @@ This is a simplified reservoir-computing experiment, not a biological simulation
 
 The trained model is already included, so you do not have to train it yourself just to play.
 
-![Full interface layout preview](assets/fly_chess_full_view_sample.gif)
+![Fly chess with neural activity and FlyGym](chess_flygym_neurons.gif)
 
 ## easiest way to play: google colab
 
+If you just want to play, use the first button. If you want the 3D fly moving with the neural activity too, use the second one.
+
+**Play chess — faster version:**
+
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/mncrftfrcnm/making-fly-play-chess/blob/main/notebooks/fly_chess_inference.ipynb)
 
-**With the 3D FlyGym view (takes longer to run):**
+**Play chess + 3D FlyGym — slower version:**
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/mncrftfrcnm/making-fly-play-chess/blob/main/notebooks/fly_chess_inference_flygym.ipynb)
 
@@ -143,6 +147,7 @@ There is also a Colab-ready training notebook, [`notebooks/fly_chess_trainer.ipy
 making-fly-play-chess/
 ├── .github/
 │   └── workflows/
+│       ├── flygym.yml
 │       └── pylint.yml
 ├── assets/
 │   └── fly_chess_full_view_sample.gif
@@ -161,6 +166,7 @@ making-fly-play-chess/
 ├── .pylintrc
 ├── LICENSE
 ├── README.md
+├── chess_flygym_neurons.gif
 ├── chess_selfplay.gif
 ├── connectome_vs_classical_architectures.ipynb
 ├── fly_chess_model.joblib
@@ -186,6 +192,7 @@ The connectome-vs-classical notebook is kept in two places. The root copy is eas
 | [`notebooks/connectome_vs_classical_architectures.ipynb`](notebooks/connectome_vs_classical_architectures.ipynb) | Notebook-folder copy of the connectome-vs-classical comparison |
 | [`connectome_vs_classical_architectures.ipynb`](connectome_vs_classical_architectures.ipynb) | Prominent root copy of the connectome-vs-classical comparison |
 | [`fly_chess_model.joblib`](fly_chess_model.joblib) | The included trained model |
+| [`chess_flygym_neurons.gif`](chess_flygym_neurons.gif) | Chess board + neural activity + animated FlyGym demo |
 | [`chess_selfplay.gif`](chess_selfplay.gif) | An example fly-vs-fly game |
 | [`assets/fly_chess_full_view_sample.gif`](assets/fly_chess_full_view_sample.gif) | Small preview of the board + neuron + FlyGym layout |
 | [`requirements.txt`](requirements.txt) | Packages needed to run inference |
@@ -193,6 +200,7 @@ The connectome-vs-classical notebook is kept in two places. The root copy is eas
 | [`requirements-train.txt`](requirements-train.txt) | Extra packages needed for training |
 | [`.pylintrc`](.pylintrc) | Pylint configuration |
 | [`.gitignore`](.gitignore) | Files and folders Git should ignore |
+| [`.github/workflows/flygym.yml`](.github/workflows/flygym.yml) | GitHub Actions workflow that runs the FlyGym tests |
 | [`.github/workflows/pylint.yml`](.github/workflows/pylint.yml) | GitHub Actions workflow that runs Pylint on tracked Python files |
 | [`LICENSE`](LICENSE) | Apache License 2.0 |
 | [`README.md`](README.md) | Project overview, setup instructions, and file guide |

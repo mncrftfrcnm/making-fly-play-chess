@@ -1,3 +1,5 @@
+# pylint: disable=wrong-import-position,import-outside-toplevel,import-error
+
 from pathlib import Path
 import sys
 
