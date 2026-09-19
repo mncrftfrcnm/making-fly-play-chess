@@ -158,6 +158,7 @@ def main():
 
         output_file = (
             Path(__file__).resolve().parent.parent
+            / "assets"
             / "chess_flygym_neurons.gif"
         )
         durations = [FRAME_MS] * len(frames)

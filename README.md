@@ -11,7 +11,7 @@ This is a simplified computing experiment, and not all of the fly's neurons are 
 
 The trained model is already included, so you do not have to train it yourself just to play.
 
-![Fly chess with neural activity and FlyGym](chess_flygym_neurons.gif)
+![Fly chess with neural activity and FlyGym](assets/chess_flygym_neurons.gif)
 
 ## easiest way to play: google colab
 
@@ -149,7 +149,7 @@ making-fly-play-chess/
 │       ├── flygym.yml
 │       └── pylint.yml
 ├── assets/
-│   └── fly_chess_full_view_sample.gif
+│   │   │   └── fly_chess_full_view_sample.gif
 ├── notebooks/
 │   ├── connectome_vs_classical_architectures.ipynb
 │   ├── fly_chess_inference.ipynb
@@ -183,16 +183,16 @@ The connectome-vs-classical notebook is kept in two places. The root copy is eas
 | [`scripts/fly_chess_inference.py`](scripts/fly_chess_inference.py) | Runs the game and the Gradio interface |
 | [`scripts/fly_chess_inference_flygym.py`](scripts/fly_chess_inference_flygym.py) | Runs the game with the optional FlyGym view |
 | [`scripts/fly_chess_trainer.py`](scripts/fly_chess_trainer.py) | Trains the model with self-play |
-| [`scripts/gif_gen.py`](scripts/gif_gen.py) | Generates `chess_selfplay.gif` |
-| [`scripts/gif_gen_flygym.py`](scripts/gif_gen_flygym.py) | Generates a FlyGym + neural activity demo GIF |
+| [`scripts/gif_gen.py`](scripts/gif_gen.py) | Generates `assets/chess_selfplay.gif` |
+| [`scripts/gif_gen_flygym.py`](scripts/gif_gen_flygym.py) | Generates `assets/chess_flygym_neurons.gif` |
 | [`notebooks/fly_chess_inference.ipynb`](notebooks/fly_chess_inference.ipynb) | Google Colab version for playing |
 | [`notebooks/fly_chess_inference_flygym.ipynb`](notebooks/fly_chess_inference_flygym.ipynb) | Google Colab version with the FlyGym view |
 | [`notebooks/fly_chess_trainer.ipynb`](notebooks/fly_chess_trainer.ipynb) | Google Colab version for training |
 | [`notebooks/connectome_vs_classical_architectures.ipynb`](notebooks/connectome_vs_classical_architectures.ipynb) | Notebook-folder copy of the connectome-vs-classical comparison |
 | [`connectome_vs_classical_architectures.ipynb`](connectome_vs_classical_architectures.ipynb) | Prominent root copy of the connectome-vs-classical comparison |
 | [`fly_chess_model.joblib`](fly_chess_model.joblib) | The included trained model |
-| [`chess_flygym_neurons.gif`](chess_flygym_neurons.gif) | Chess board + neural activity + animated FlyGym demo |
-| [`chess_selfplay.gif`](chess_selfplay.gif) | An example fly-vs-fly game |
+| [`assets/chess_flygym_neurons.gif`](assets/chess_flygym_neurons.gif) | Chess board + neural activity + animated FlyGym demo |
+| [`assets/chess_selfplay.gif`](assets/chess_selfplay.gif) | An example fly-vs-fly game |
 | [`assets/fly_chess_full_view_sample.gif`](assets/fly_chess_full_view_sample.gif) | Small preview of the board + neuron + FlyGym layout |
 | [`requirements.txt`](requirements.txt) | Packages needed to run inference |
 | [`requirements-flygym.txt`](requirements-flygym.txt) | Extra packages needed for the FlyGym version |
