@@ -149,7 +149,9 @@ making-fly-play-chess/
 │       ├── flygym.yml
 │       └── pylint.yml
 ├── assets/
-│   │   │   └── fly_chess_full_view_sample.gif
+│   ├── chess_flygym_neurons.gif
+│   ├── chess_selfplay.gif
+│   └── fly_chess_full_view_sample.gif
 ├── notebooks/
 │   ├── connectome_vs_classical_architectures.ipynb
 │   ├── fly_chess_inference.ipynb
@@ -165,8 +167,6 @@ making-fly-play-chess/
 ├── .pylintrc
 ├── LICENSE
 ├── README.md
-├── chess_flygym_neurons.gif
-├── chess_selfplay.gif
 ├── connectome_vs_classical_architectures.ipynb
 ├── fly_chess_model.joblib
 ├── requirements-flygym.txt
