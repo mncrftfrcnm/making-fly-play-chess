@@ -19,7 +19,7 @@ def test_mujoco_import():
     assert mujoco.__version__
 
 
-def test_chess_imports:
+def test_chess_imports():
     import chess
 
 
