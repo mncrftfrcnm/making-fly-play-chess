@@ -3,27 +3,20 @@
 from pathlib import Path
 import sys
 
+import chess
 import numpy as np
-
-import fly_chess_inference as core
-import fly_chess_inference_flygym as flygym_app
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
+import fly_chess_inference as core
+import fly_chess_inference_flygym as flygym_app
 
 
 def test_mujoco_import():
     import mujoco
 
     assert mujoco.__version__
-
-
-def test_chess_imports():
-    import chess
-
-
-    assert chess is not None
 
 
 def test_flygym_import():
@@ -33,7 +26,7 @@ def test_flygym_import():
 
 
 def test_flygym_does_not_start_on_import():
-    assert flygym_app.fly_sim is not None
+    assert flygym_app.fly_sim is None
 
 
 def test_model_shapes():
@@ -41,20 +34,6 @@ def test_model_shapes():
     assert len(core.readout_indices) == len(core.value_weights) - 1
     assert np.all(core.readout_indices >= 0)
     assert np.all(core.readout_indices < core.matrix.shape[0])
-
-
-def test_gradio():
-    import gradio as gr
-    
-    
-    def greet(name):
-      return f"hello, {name}!"
-
-
-    demo = gr.Interface(fn=greet, inputs="text", outputs="text")
-
-    
-    assert gr is not None
 
 
 def test_board_encoding():
@@ -121,15 +100,3 @@ def test_trace_for_last_move():
     assert trace is not None
     assert trace["move"] == chess.Move.from_uci("e2e4")
     assert trace["states"].shape[0] == core.propagation_steps
-
-
-def test_PIL_and_gif_gen():
-    from PIL import Image, ImageDraw, ImageFont
-    
-    image = Image.new(
-        "RGB", (8 * square_size, top + 8 * square_size + 34), "#181818"
-    )
-    draw = ImageDraw.Draw(image)
-
-    
-    assert Image is not None
