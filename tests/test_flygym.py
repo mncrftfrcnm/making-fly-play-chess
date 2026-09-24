@@ -11,12 +11,18 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 import fly_chess_inference as core
 import fly_chess_inference_flygym as flygym_app
+import gif_gen
 
 
 def test_mujoco_import():
     import mujoco
 
     assert mujoco.__version__
+
+
+def test_chess_imports():
+    assert chess.Board is not None
+    assert chess.Move is not None
 
 
 def test_flygym_import():
@@ -34,6 +40,18 @@ def test_model_shapes():
     assert len(core.readout_indices) == len(core.value_weights) - 1
     assert np.all(core.readout_indices >= 0)
     assert np.all(core.readout_indices < core.matrix.shape[0])
+
+
+def test_gradio():
+    import gradio as gr
+
+    def greet(name):
+        return f"hello, {name}!"
+
+    demo = gr.Interface(fn=greet, inputs="text", outputs="text")
+
+    assert isinstance(demo, gr.Interface)
+    assert greet("fly") == "hello, fly!"
 
 
 def test_board_encoding():
@@ -100,3 +118,15 @@ def test_trace_for_last_move():
     assert trace is not None
     assert trace["move"] == chess.Move.from_uci("e2e4")
     assert trace["states"].shape[0] == core.propagation_steps
+
+
+def test_PIL_and_gif_gen():
+    from PIL import Image
+
+    image = gif_gen.frame(chess.Board(), "Test frame")
+    rendered_font = gif_gen.font(18)
+
+    assert isinstance(image, Image.Image)
+    assert image.mode == "RGB"
+    assert image.size == (640, 760)
+    assert hasattr(rendered_font, "getbbox")
