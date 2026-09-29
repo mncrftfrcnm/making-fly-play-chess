@@ -226,3 +226,4 @@ profile_default.py
 # Codex
 codex
 codex/
+.codex/
