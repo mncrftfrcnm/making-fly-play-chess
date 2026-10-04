@@ -249,9 +249,8 @@ def start_game(mode, side, delay, max_plies, top_moves, show_flygym):
         else:
             human_color = state.get("human_color")
             fly_moved = (
-                move_count > previous_moves
+                0 == previous_moves < move_count
                 and human_color == chess.BLACK
-                and previous_moves == 0
             )
 
         previous_moves = move_count
