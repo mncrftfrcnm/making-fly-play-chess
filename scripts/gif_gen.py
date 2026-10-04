@@ -1,3 +1,6 @@
+''' just a simple gif generatong script. not optimized for api use as of now.'''
+
+
 from pathlib import Path
 
 import chess
