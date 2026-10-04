@@ -7,15 +7,15 @@ So, this project uses the fruit fly connectome from [Drosophila_brain_model](htt
 The short explanation is that a chess board gets turned into numbers, those numbers are sent through a network made from fly-neuron connections, and the result is used to score the position. White tries to make the score higher, Black tries to make it lower.
 
 
-This is a simplified computing experiment, and not all of the fly's neurons are trained - only the readout ones, and that's why there is so little movement in fly in the gif. Of course, anyone with enough patience to wait for all the neurons to be trained can train all of them, and you only need to change a few parameters in the code. This is open-source for a reason, after all, so do anything you want, as long as it is allowed by license
+This is a simplified computing experiment, and not all of the fly's neurons are trained - only the readout ones, and that's why there is so little movement in fly in the gif. Of course, anyone with enough patience to wait for all the neurons to be trained can train all of them, and you only need to change a few parameters in the code. This is open-source for a reason, after all, so do anything you want, as long as it is allowed by license.
 
-The trained model is already included, so you do not have to train it yourself just to play.
+The trained model is already included, so you do not have to train it yourself just to play. But again, you can train your own if you want
 
 ![Fly chess with neural activity and FlyGym](assets/chess_flygym_neurons.gif)
 
 ## easiest way to play: google colab
 
-If you just want to play, use the first button. If you want the 3D fly moving with the neural activity too, use the second one.
+If you just want to play, use the first button. If you want the 3D fly moving with the neural activity too, use the second one. second one also allows to play, but it is slowers, as the code has to render the fly movement.
 
 **Play chess — faster version:**
 
