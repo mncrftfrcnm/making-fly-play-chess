@@ -130,4 +130,3 @@ def test_PIL_and_gif_gen():
     assert image.mode == "RGB"
     assert image.size == (640, 760)
     assert hasattr(rendered_font, "getbbox")
-
