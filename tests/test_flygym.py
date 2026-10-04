@@ -46,7 +46,7 @@ def test_gradio():
     import gradio as gr
 
     def greet(name):
-        return f"hello, {name}!"
+        return f"hello, {name}!" # just a random small code
 
     demo = gr.Interface(fn=greet, inputs="text", outputs="text")
 
@@ -130,3 +130,5 @@ def test_PIL_and_gif_gen():
     assert image.mode == "RGB"
     assert image.size == (640, 760)
     assert hasattr(rendered_font, "getbbox")
+
+
